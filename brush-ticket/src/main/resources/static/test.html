@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>测试</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+<div>
+        <span>用户名：</span><input class="um" type="text" name="username"/>
+        <span>密码：</span><input class="pw" type="password" name="password"/>
+        <button class="button" type="button" onclick="method.login()">登录</button>
+
+</div>
+<div>
+    <img class="getImg" src="http://localhost:80/12306/1539431659311.jpg" onclick="vControl('GETMOUSEPOSINPIC',this)" />
+    <button type="button" class="clear" onclick="method.clear()">清空</button>
+</div>
+<script language="javascript" type="text/javascript">
+
+    var position = '';
+    window.onload=function (){
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:9527/brushticket/getImg",
+            data: {username:$("#username").val(), content:$("#content").val()},
+            dataType: "json",
+            success: function(data){
+                if (data.status == "true"){
+                    console.info("data.imgName")
+                    method.imgName = data.imgName;
+                    $(".getImg").attr('src',data.imgName);
+                }
+            }
+        });
+    }
+
+
+    var method = {
+        "imgName":"http://localhost:80/12306/1539431659311.jpg",
+        "clear":function () {
+            position = "";
+        },
+        "login":function () {
+            var username = $(".um").val();
+            var password = $(".pw").val();
+            $.ajax({
+                        type: "POST",
+                        url: "http://localhost:9527/brushticket/login",
+                        data: {username:username,password:password,position:position,imgName:method.imgName},
+                        dataType: "json",
+                        success: function(data){
+                        }
+                    });
+        }
+    }
+
+
+
+
+    var JPos = {};
+    (function($){
+        $.$getAbsPos = function(p){
+            var _x = 0;
+            var _y = 0;
+            while(p.offsetParent){
+                _x += p.offsetLeft;
+                _y += p.offsetTop;
+                p = p.offsetParent;
+            }
+            _x += p.offsetLeft;
+            _y += p.offsetTop;
+            return {x:_x,y:_y};
+        };
+        $.$getMousePos = function(evt){
+            var _x,_y;
+            evt = evt || window.event;
+            if(evt.pageX || evt.pageY){
+                _x = evt.pageX;
+                _y = evt.pageY;
+            }else if(evt.clientX || evt.clientY){
+                _x = evt.clientX + document.body.scrollLeft - document.body.clientLeft;
+                _y = evt.clientY + document.body.scrollTop - document.body.clientTop;
+            }else{
+                return $.$getAbsPos(evt.target);
+            }
+            return {x:_x,y:_y};	}})(JPos);
+    function vControl(pChoice){
+        console.info("点击");
+        switch(pChoice){
+            case "GETMOUSEPOSINPIC":
+                var mPos = JPos.$getMousePos();
+                var iPos = JPos.$getAbsPos(arguments[1]);
+                window.status = (mPos.x - iPos.x) + " " + (mPos.y - iPos.y);
+                position += ","+(mPos.x - iPos.x) + "," + (mPos.y - iPos.y-30)
+                console.info(position)
+                break;
+        }
+    }
+</script>
+</body>
+</html>
+
