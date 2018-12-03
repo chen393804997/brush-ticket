@@ -1,5 +1,6 @@
 package com.czw.brushticket.utils;
 
+import javafx.scene.media.SubtitleTrack;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -31,9 +32,21 @@ public class HttpClientUtil {
 
     public static final Map<String,Object> map = new HashMap<>();
 
-    public static HttpResponse doGetResponse(String url) {
+    public static HttpResponse doGetResponse(String url,Map<String,String> parms) {
         try {
             HttpClient client = new DefaultHttpClient();
+            if (parms != null && !parms.isEmpty()){
+                StringBuffer parm = new StringBuffer("?");
+                int num = 0;
+                for (String key : parms.keySet()){
+                    if (num != 0){
+                        parm.append("&");
+                    }
+                    parm.append(key+"="+parms.get(key));
+                    num++;
+                }
+                url += parm;
+            }
             //发送get请求
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);

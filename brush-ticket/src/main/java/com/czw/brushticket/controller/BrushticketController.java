@@ -1,10 +1,20 @@
 package com.czw.brushticket.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.czw.brushticket.service.BrushticketService;
 import com.czw.brushticket.utils.ConfigUtil;
 import com.czw.brushticket.utils.FileUtil;
 import com.czw.brushticket.utils.HttpClientUtil;
+import com.czw.brushticket.utils.Result;
+import jdk.nashorn.internal.parser.JSONParser;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,55 +32,34 @@ import java.util.Map;
  **/
 @RestController
 @RequestMapping("/brushticket")
-public class BrushticketController {
+public class BrushticketController extends BaseController{
+
+    @Autowired
+    private BrushticketService brushticketService;
 
     @RequestMapping("/getImg")
-    public Map<String,String> getImg(){
-        String imgName = System.currentTimeMillis()+".jpg";
-        Map<String,String> result = new HashMap<>();
-        result.put("status","false");
-        boolean flag = HttpClientUtil.doGetByImg(ConfigUtil.GET_IMG,imgName);
-        if (flag){
-            result.put("status","true");
-            result.put("imgName",ConfigUtil.IMG_IP+imgName);
-        }
-        return result;
-
+    public Result getImg(){
+        return getResult(brushticketService.getImg());
     }
 
     @RequestMapping(value = "/login",method = RequestMethod.POST)
-    public void login(String username,String password,String position,String imgName) throws IOException {
+    public Result login(String username, String password, String position, String imgName) throws IOException {
         System.out.println("名称："+username+" 密码："+password+" 位置："+position+ " 照片"+imgName);
-        if (StringUtils.isEmpty(position)){
-            return;
-        }
-        String answer = position.substring(1);
-        String[] ids = imgName.split("/");
-        //图片名称
-        String imgname = ids[ids.length-1];
-        //图片标识
-        String _passport_ct = (String) HttpClientUtil.map.get(imgname);
-        System.out.println(_passport_ct);
-        //验证码校验
-        List<NameValuePair> parms = new ArrayList<NameValuePair>(5);
-        NameValuePair valuePair = new BasicNameValuePair("answer",answer);
-        parms.add(valuePair);
-        NameValuePair login_site = new BasicNameValuePair("login_site","E");
-        parms.add(login_site);
-        NameValuePair rand = new BasicNameValuePair("rand","sjrand");
-        parms.add(rand);
-        HttpClientUtil.doPost(ConfigUtil.CAPTCHA_CHECK,parms,_passport_ct);
-        //删除照片
-        FileUtil.delete(ConfigUtil.PATH+imgname);
-        //登录
-        List<NameValuePair> parms1 = new ArrayList<>();
-        NameValuePair nameValuePair = new BasicNameValuePair("username",username);
-        NameValuePair nameValuePair1 = new BasicNameValuePair("password",password);
-        NameValuePair nameValuePair2 = new BasicNameValuePair("appid","otn");
-        parms1.add(nameValuePair);
-        parms1.add(nameValuePair1);
-        parms1.add(nameValuePair2);
-        HttpClientUtil.doPost(ConfigUtil.LOGIN,parms1,_passport_ct);
+        brushticketService.login(username,password,position,imgName);
+        return getResult(1);
     }
+
+    @RequestMapping(value = "/query",method = RequestMethod.GET)
+    public Result query(String dateTime,String start,String end) throws IOException {
+        String url = ConfigUtil.QUERY.replace("DATE_TIME",dateTime).replace("START",start).replace("END",end);
+        HttpResponse httpResponse = HttpClientUtil.doGetResponse(url,null);
+        HttpEntity responseEntity = httpResponse.getEntity();
+        String str = EntityUtils.toString(responseEntity);
+        JSONObject jsonObject = (JSONObject) JSON.parse(str);
+        JSONObject data = (JSONObject) jsonObject.get("data");
+        JSONArray result = (JSONArray) data.get("result");
+        return getResult(result);
+    }
+
 
 }

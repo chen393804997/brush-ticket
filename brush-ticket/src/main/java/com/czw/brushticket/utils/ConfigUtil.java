@@ -15,4 +15,6 @@ public class ConfigUtil {
     public static final String PATH = "/Users/Mac/local/apache2.4/12306/";
 
     public static final String IMG_IP = "http://localhost:80/12306/";
+
+    public static final String QUERY = "https://kyfw.12306.cn/otn/leftTicket/query?leftTicketDTO.train_date=DATE_TIME&leftTicketDTO.from_station=START&leftTicketDTO.to_station=END&purpose_codes=ADULT";
 }
