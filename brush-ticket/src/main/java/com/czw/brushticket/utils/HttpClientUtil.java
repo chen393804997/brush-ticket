@@ -156,8 +156,10 @@ public class HttpClientUtil {
 
 
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IOException {
+       String str = "Ku36RTbFPgVC%2BCfwPz2a%2BsenNQUJtwQtjG36g3zZje4J3IytrQuIpdRgAtLVZVHhSkiSZ9hISaDi%0AiT0ciAK9IdvJQpENMWqW1fL5gfnHp1bvTYqm64DCZIiC5Gat6l83xCRJUNJiCw%2FHeIAzP%2BJUv0aT%0AK5BbLYTY4GsgLq3T4yeclDjTC3UrvUIRjbqsajKmlBhOChM5rkFhY0q9hgUUWRMPO%2FmCmyKiz5AF%0ArHhlGkhB%2BFbeakKQYwHOmNTXX84E";
+       str = str.replaceAll("%2F","/").replaceAll("%0A","").replaceAll("%2B","+").replaceAll("%3D","");
+        System.out.println(str);
     }
 
 }
