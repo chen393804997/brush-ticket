@@ -1,19 +1,29 @@
 package com.czw.brushticket.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.czw.brushticket.HttpUtil.OkHttpUtils;
 import com.czw.brushticket.service.BrushticketService;
 import com.czw.brushticket.utils.ConfigUtil;
 import com.czw.brushticket.utils.FileUtil;
 import com.czw.brushticket.utils.HttpClientUtil;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author: czw
@@ -21,30 +31,32 @@ import java.util.Map;
  **/
 @Service
 public class BrushticketServiceImpl implements BrushticketService {
+
+    public @Bean OkHttpUtils okHttpUtils(){
+        return new OkHttpUtils();
+    }
+
+    @Autowired
+    private OkHttpUtils okHttpUtils;
+
     @Override
-    public Map<String, String> getImg() {
-        String imgName = System.currentTimeMillis()+".jpg";
-        Map<String,String> result = new HashMap<>();
-        result.put("status","false");
-        boolean flag = HttpClientUtil.doGetByImg(ConfigUtil.GET_IMG,imgName);
-        if (flag){
-            result.put("status","true");
-            result.put("imgName",ConfigUtil.IMG_IP+imgName);
-        }
-        return result;
+    public JSONObject getImg() {
+        String uuid = UUID.randomUUID().toString();
+        JSONObject flag = HttpClientUtil.doGetByImg(ConfigUtil.GET_IMG,uuid);
+        flag.put("imgName",flag.getString("src"));
+        flag.put("uuid",uuid);
+        return flag;
     }
 
     @Override
-    public void login(String username, String password, String position, String imgName) throws IOException {
+    public void login(String username, String password, String position, String uuid) throws IOException {
         if (StringUtils.isEmpty(position)){
             return;
         }
         String answer = position.substring(1);
-        String[] ids = imgName.split("/");
-        //图片名称
-        String imgname = ids[ids.length-1];
+
         //图片标识
-        String _passport_ct = (String) HttpClientUtil.map.get(imgname);
+        String _passport_ct = (String) HttpClientUtil.map.get(uuid);
         System.out.println(_passport_ct);
         //验证码校验
         List<NameValuePair> parms = new ArrayList<NameValuePair>(5);
@@ -55,8 +67,6 @@ public class BrushticketServiceImpl implements BrushticketService {
         NameValuePair rand = new BasicNameValuePair("rand","sjrand");
         parms.add(rand);
         HttpClientUtil.doPost(ConfigUtil.CAPTCHA_CHECK,parms,_passport_ct);
-        //删除照片
-        FileUtil.delete(ConfigUtil.PATH+imgname);
         //登录
         List<NameValuePair> parms1 = new ArrayList<>();
         NameValuePair nameValuePair = new BasicNameValuePair("username",username);

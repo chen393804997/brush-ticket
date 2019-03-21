@@ -1,5 +1,7 @@
 package com.czw.brushticket.service;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -9,7 +11,7 @@ import java.util.Map;
  **/
 public interface BrushticketService {
 
-    Map<String,String> getImg();
+    JSONObject getImg();
 
     void login(String username,String password,String position,String imgName) throws IOException;
 

@@ -6,7 +6,7 @@ package com.czw.brushticket.utils;
  **/
 public class ConfigUtil {
     /** 获取验证码图片地址*/
-    public static final String GET_IMG = "https://kyfw.12306.cn/passport/captcha/captcha-image?login_site=E&module=login&rand=sjrand&0.7870525409538782";
+    public static final String GET_IMG = "https://kyfw.12306.cn/passport/captcha/captcha-image64?login_site=E&module=login&rand=sjrand";
     /** 验证图片*/
     public static final String CAPTCHA_CHECK = "https://kyfw.12306.cn/passport/captcha/captcha-check";
     /** 登录*/

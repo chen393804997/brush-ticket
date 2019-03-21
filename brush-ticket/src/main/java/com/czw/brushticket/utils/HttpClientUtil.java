@@ -1,6 +1,10 @@
 package com.czw.brushticket.utils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.czw.brushticket.HttpUtil.OkHttpUtils;
 import javafx.scene.media.SubtitleTrack;
+import okhttp3.ResponseBody;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -56,7 +60,10 @@ public class HttpClientUtil {
         }
         return null;
     }
-    public static boolean doGetByImg(String url,String path){
+
+    public static JSONObject doGetByImg(String url, String path){
+        JSONObject resultObject = new JSONObject();
+        resultObject.put("status",false);
         try {
             HttpClient client = new DefaultHttpClient();
             //发送get请求
@@ -64,31 +71,33 @@ public class HttpClientUtil {
             HttpResponse httpResponse = client.execute(request);
             /**请求发送成功，并得到响应**/
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                resultObject.put("status",true);
                 HttpEntity httpEntity = httpResponse.getEntity();
-                byte[] data = EntityUtils.toByteArray(httpEntity);
-                //图片存入磁盘
-                FileOutputStream fos = new FileOutputStream(ConfigUtil.PATH+path);
-                fos.write(data);
-                fos.close();
+                String result = EntityUtils.toString(httpEntity);
+                JSONObject jsonObject = JSON.parseObject(result);
+                resultObject.put("src",jsonObject.getString("image"));
                 CookieStore cookieStore = ((DefaultHttpClient) client).getCookieStore();
                 List<Cookie> cookies = cookieStore.getCookies();
                 for (Cookie cookie : cookies){
                     if (cookie.getName().equals("_passport_ct")){
+                        jsonObject.put("passport_ct",cookie.getValue());
                         map.put(path,cookie.getValue());
                         break;
                     }
                 }
-                return true;
+                return resultObject;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
 
-        return false;
+        return resultObject;
     }
 
-    public static String doPost(String url, List<NameValuePair> parms, String _passport_ct) throws IOException {
+    public static JSONObject doPost(String url, List<NameValuePair> parms, String _passport_ct) throws IOException {
+        JSONObject resultObject = new JSONObject();
+        resultObject.put("status",false);
         HttpClient client = new DefaultHttpClient();
         HttpPost post = new HttpPost(url);
         HttpEntity entity = new UrlEncodedFormEntity(parms, "UTF-8");
@@ -109,6 +118,7 @@ public class HttpClientUtil {
         System.out.println(EntityUtils.toString(post.getEntity()));
         HttpResponse response = client.execute(post);
         if (response.getStatusLine().getStatusCode() == 200) {
+            resultObject.put("status",true);
             //得到响应的实体
             HttpEntity responseEntity = response.getEntity();
             String str = EntityUtils.toString(responseEntity);
@@ -157,8 +167,8 @@ public class HttpClientUtil {
 
 
     public static void main(String[] args) throws IOException {
-       String str = "Ku36RTbFPgVC%2BCfwPz2a%2BsenNQUJtwQtjG36g3zZje4J3IytrQuIpdRgAtLVZVHhSkiSZ9hISaDi%0AiT0ciAK9IdvJQpENMWqW1fL5gfnHp1bvTYqm64DCZIiC5Gat6l83xCRJUNJiCw%2FHeIAzP%2BJUv0aT%0AK5BbLYTY4GsgLq3T4yeclDjTC3UrvUIRjbqsajKmlBhOChM5rkFhY0q9hgUUWRMPO%2FmCmyKiz5AF%0ArHhlGkhB%2BFbeakKQYwHOmNTXX84E";
-       str = str.replaceAll("%2F","/").replaceAll("%0A","").replaceAll("%2B","+").replaceAll("%3D","");
+       String str = "KgwmJoX9sF01CVXTQ49HO4Y9vBgPzsswT4GUl7iHn8J%2F7080NFo4Ak3zAp3KwJrDV1HtdMauMTDF%0AcMalZdWfIBpXOC5ApbtubVGMMvuxiMVFI1shN0OcriNWkcivLS1lrofNiYuMS9GZTRcwx13AliVc%0ACKa92kMnYWCj2eyX9gwwtL5ZX89%2BBJkZnY8yCLSLVSzVSQY3dicsBFQfFN2oiXg2sHBs5XKAgWI3%0A3ryXh5%2BkWGfc2c3LCwE0xwlZw90QF8JHp1eW5sE%3D";
+       str = str.replaceAll("%2F","/").replaceAll("%0A","\n").replaceAll("%2B","+").replaceAll("%3D","=");
         System.out.println(str);
     }
 
